@@ -67,8 +67,8 @@ for cellnum = cells
 
     %% N: fit nonlinearity on flicker bar
     trial = 4;
-    [psth_flckbr, ~, ~] = PSTH_aet(folder, allspk_bycell, cellnum, trial);
-    [fun_nonlinear, pi_nonlinear] = FitNonlinearity_aet(method_nonlinear, output_linear_flckbr, psth_flckbr);
+    [psth_flckbr, ~, ~] = calc_psth(folder, allspk_bycell, cellnum, trial);
+    [fun_nonlinear, pi_nonlinear] = nonlinearity_fit(method_nonlinear, output_linear_flckbr, psth_flckbr);
     paramsnl(cellnum, :) = pi_nonlinear;
 
     %% LN output: control
@@ -78,13 +78,13 @@ for cellnum = cells
     %% control trials
     binsize = 0.1;
     trials = 5:9;
-    [psth_cntrl, edges, rho_cntrl, std_cntrl] = PSTH_aet(folder, allspk_bycell, cellnum, trials, binsize, T);    
+    [psth_cntrl, edges, rho_cntrl, std_cntrl] = calc_psth(folder, allspk_bycell, cellnum, trials, binsize, T);    
     psth_cntrl_interp = interpolate_signal(psth_cntrl, edges, xq);
     std_cntrl_interp = interpolate_signal(std_cntrl, edges, xq);
 
     %% drug trials
     trials = 10:22;
-    [psth_drug, edges, rho_drug, std_drug] = PSTH_aet(folder, allspk_bycell, cellnum, trials, binsize, T);
+    [psth_drug, edges, rho_drug, std_drug] = calc_psth(folder, allspk_bycell, cellnum, trials, binsize, T);
     psth_drug_interp = interpolate_signal(psth_drug, edges, xq);
     
     rho = corrcoef(output_nonlinear, psth_cntrl_interp);
