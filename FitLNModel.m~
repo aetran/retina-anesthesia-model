@@ -1,9 +1,7 @@
-folder = '/home/alvita/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
-% folder = 'D:/Dropbox/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
-
 %% make model choices
 % method_denoise: parametric, svd
 % method_nonlinear: sigmoid, relu
+
 date = '20171207';
 method_denoise = 'parametric';
 method_nonlinear = 'sigmoid';
@@ -12,12 +10,15 @@ if strcmp(method_denoise, 'svd')
 else
     SVD = [];
 end
-opt_figure = 1;
-opt_close = 0;
-cells = [16];
+opt_figure = 0;
+opt_close = 1;
+cells = [1];
 
 %% load STAs and reconstructed flicker bar stimulus and barcode stimulus
+folder = '/home/alvita/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
+% folder = 'D:/Dropbox/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
 addpath([folder 'mcd/']);
+
 fps = 60;
 T = 38*29/60;
 L = T*fps; % 20 seconds at 60 fps
@@ -25,7 +26,6 @@ L = T*fps; % 20 seconds at 60 fps
 switch date
     case '20171207'
         load([folder 'MEA_data/20171207_ethanol/allspk_kilosorted_20171207.mat']);
-        trial_sta = 4;
     case '20181215'
         load([folder 'MEA_data/20181215_ethanol/20181215_allspkbycell.mat']);
 end
@@ -90,9 +90,13 @@ for cellnum = cells
 
     %% control trials
     psth_cntrl_interp = interpolate_signal(PSTH.cntrl(cellnum, :), PSTH.edges, xq);
+%     std_cntrl_interp = interpolate_signal(PSTH.cntrl_std(cellnum, :), PSTH.edges, xq);
 
     %% drug trials
-    psth_drug_interp = interpolate_signal(PSTH.drug(cellnum, :), PSTH.edges, xq);
+        psth_cntrl_interp = interpolate_signal(PSTH.cntrl(cellnum, :), PSTH.edges, xq);
+
+    [psth_drug, edges, rho_drug, std_drug] = calc_psth(folder, allspk_bycell, cellnum, trial_drug, binsize, T);
+    psth_drug_interp = interpolate_signal(psth_drug, edges, xq);
     
     rho = corrcoef(output_nonlinear, psth_cntrl_interp);
     goodnessoffit(cellnum) = rho(1, 2);
@@ -108,7 +112,7 @@ for cellnum = cells
         plot(xq, output_nonlinear, 'k', 'DisplayName', legendtext);
         plot(xq, psth_cntrl_interp, 'b', 'DisplayName', 'control');
         plot(xq, psth_drug_interp, 'r', 'DisplayName', 'drug');
-        xlim([0, T]);
+        xlim([0, T/fps]);
         legend('show');
         xlabel('Time (s)');
         ylabel('Firing Rate (Hz)');
@@ -158,4 +162,4 @@ for cellnum = cells
         end
     end
 end
-% save([folder_results 'LN_' method_denoise '-' method_nonlinear '.mat'], 'paramsnl', 'paramsl', 'paramsspace', 'paramstime', 'goodnessoffit', 'SVD');
+save([folder_results 'LN_' method_denoise '_' method_nonlinear '.mat'], 'paramsnl', 'paramsl', 'paramsspace', 'paramstime', 'goodnessoffit', 'SVD');
