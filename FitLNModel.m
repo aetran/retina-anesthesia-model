@@ -2,25 +2,39 @@
 % method_denoise: parametric, svd
 % method_nonlinear: sigmoid, relu
 
+date = '20171207';
 method_denoise = 'parametric';
 method_nonlinear = 'sigmoid';
-SVD = struct('ntimepoints_to_keep', 16, 'npixels_to_keep', 10, 'components_to_use', [1, 2]);
-
+if strcmp(method_denoise, 'svd')
+    SVD = struct('ntimepoints_to_keep', 16, 'npixels_to_keep', 10, 'components_to_use', [1, 2]);
+else
+    SVD = [];
+end
 opt_figure = 0;
 opt_close = 1;
+cells = [1];
 
-%% get spike data from barcode stimulus
+%% load STAs and reconstructed flicker bar stimulus and barcode stimulus
 folder = '/home/alvita/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
 % folder = 'D:/Dropbox/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
-load([folder 'MEA_data/20171207_ethanol/allspk_kilosorted_20171207.mat']);
+addpath([folder 'mcd/']);
+
 fps = 60;
-T = 38*29/60*fps; % 20 seconds at 60 fps
+T = 38*29/60;
+L = T*fps; % 20 seconds at 60 fps
 
-%% load reconstructed flicker bar stimulus and barcode stimulus
-load('20171207_ethanol_stimulus.mat')
-
-%% get ST from flicker bar stimulus
-load('20171207_ethanol_ST.mat')
+switch date
+    case '20171207'
+        load([folder 'MEA_data/20171207_ethanol/allspk_kilosorted_20171207.mat']);
+        trial_sta = 4;
+        trial_cntrl = 5:9;
+        trial_drug = 10:22;
+    case '20181215'
+        load([folder 'MEA_data/20181215_ethanol/20181215_allspkbycell.mat']);
+end
+folder_results = [folder 'results/' date '/'];
+load([folder_results 'ST.mat']);
+load([folder_results 'stim.mat']);
 
 %% figure settings
 set(groot,'defaultLineLineWidth',2)
@@ -45,7 +59,9 @@ switch method_nonlinear
     case 'sigmoid'
         paramsnl = zeros(numcells, 3);
 end
-cells = 1:numcells;
+if isempty(cells)
+    cells = 1:numcells;
+end
 
 for cellnum = cells
     disp(cellnum);
@@ -66,25 +82,22 @@ for cellnum = cells
     paramsl(cellnum, :, :) = profile_spacetime;
 
     %% N: fit nonlinearity on flicker bar
-    trial = 4;
-    [psth_flckbr, ~, ~] = calc_psth(folder, allspk_bycell, cellnum, trial);
+    [psth_flckbr, ~, ~] = calc_psth(folder, allspk_bycell, cellnum, trial_sta);
     [fun_nonlinear, pi_nonlinear] = nonlinearity_fit(method_nonlinear, output_linear_flckbr, psth_flckbr);
     paramsnl(cellnum, :) = pi_nonlinear;
 
     %% LN output: control
     output_nonlinear = fun_nonlinear(pi_nonlinear, output_linear);
-    xq = 1/fps * (1:T);
+    xq = 1/fps * (1:L);
 
     %% control trials
     binsize = 0.1;
-    trials = 5:9;
-    [psth_cntrl, edges, rho_cntrl, std_cntrl] = calc_psth(folder, allspk_bycell, cellnum, trials, binsize, T);    
+    [psth_cntrl, edges, rho_cntrl, std_cntrl] = calc_psth(folder, allspk_bycell, cellnum, trial_cntrl, binsize, T);    
     psth_cntrl_interp = interpolate_signal(psth_cntrl, edges, xq);
     std_cntrl_interp = interpolate_signal(std_cntrl, edges, xq);
 
     %% drug trials
-    trials = 10:22;
-    [psth_drug, edges, rho_drug, std_drug] = calc_psth(folder, allspk_bycell, cellnum, trials, binsize, T);
+    [psth_drug, edges, rho_drug, std_drug] = calc_psth(folder, allspk_bycell, cellnum, trial_drug, binsize, T);
     psth_drug_interp = interpolate_signal(psth_drug, edges, xq);
     
     rho = corrcoef(output_nonlinear, psth_cntrl_interp);
@@ -151,4 +164,4 @@ for cellnum = cells
         end
     end
 end
-save(['20171207_LNfitparams_' method_denoise '_' method_nonlinear '.mat'], 'paramsnl', 'paramsl', 'paramsspace', 'paramstime', 'goodnessoffit');
+save([folder_results 'LN_' method_denoise '_' method_nonlinear '.mat'], 'paramsnl', 'paramsl', 'paramsspace', 'paramstime', 'goodnessoffit', 'SVD');

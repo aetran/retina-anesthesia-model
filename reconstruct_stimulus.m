@@ -1,23 +1,21 @@
-function X = reconstruct_stimulus(trial, folder)    
-
-    if nargin == 1
-        folder = '/home/alvita/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
-    end
+function X = reconstruct_stimulus(trial, folder, date)    
 
     %% experiment details of all trials
-    load([folder 'MEA_data/20171207_ethanol/Param_kilosort_20171207.mat']);
-    for i=1:length(Param.DataInfo)
-        disp(Param.DataInfo{1, i});
+    switch date
+        case '20171207'
+            load([folder 'MEA_data/20171207_ethanol/allspk_kilosorted_20171207.mat']); % load spike times from sorted data
+            sync_paths = [folder 'MEA_data/20171207_ethanol/20171207_processed/']; % get the sync data of the trial
+        case '20181215'
+            load([folder 'MEA_data/20181215_ethanol/20181215_allspkbycell.mat']);
+            sync_paths = [];
     end
-
+    
     %% load parameter file for trial
     trial = num2str(trial);
-
-    load([folder 'param_stimuli/20171207/Checkerboard_' trial '.mat'])
+    load([folder 'param_stimuli/' date '/Checkerboard_' trial '.mat'])
     stimparam = param;
 
     %% get sync data for trial
-    sync_paths = [folder 'MEA_data/20171207_ethanol/20171207_processed/'];
     syncpath1 = [sync_paths 'data' trial] ;
     sync_time1 = LoadConvertedData(syncpath1);
     sync_time1 = GetStimTiming_yulimod(sync_time1);

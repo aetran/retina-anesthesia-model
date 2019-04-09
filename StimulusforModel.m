@@ -1,13 +1,25 @@
 %% get spike data from barcode stimulus
 folder = '/home/alvita/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
 % folder = 'D:/Dropbox/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
-load([folder 'MEA_data/20171207_ethanol/allspk_kilosorted_20171207.mat']);
+date = '20171207';
+
+switch date
+    case '20171207'
+        load([folder 'MEA_data/20171207_ethanol/allspk_kilosorted_20171207.mat']);
+        trial_flckbr = 4;
+        trial_barcode = 5;
+    case '20181215'
+        load([folder 'MEA_data/20181215_ethanol/20181215_allspkbycell.mat']);
+end
+folder_results = [folder 'results/' date '/'];
+load([folder_results 'ST.mat']);
+filename = [folder_results 'stim.mat'];
 
 %% reconstruct flicker bar stimulus
-stimulus_flckbr = reconstruct_stimulus(4, folder);   
+stimulus_flckbr = reconstruct_stimulus(trial_flckbr, folder, date);   
   
 %% reconstruct barcode stimulus
-X = reconstruct_stimulus(5, folder);   
+X = reconstruct_stimulus(trial_barcode, folder, date);
 F = size(X, 2);
 dx_bc = 4;
  
@@ -42,3 +54,4 @@ for f = 1:F-1
  
     stimulus_barcode(:, left_edge:right_edge) = repmat(stim_stres, 1, frames);
 end
+save(filename, 'stimulus_flckbr', 'stimulus_barcode');

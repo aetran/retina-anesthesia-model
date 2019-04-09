@@ -1,10 +1,10 @@
-function [psth, edges, corr, variability] = calc_psth(folder, allspk_bycell, cellnum, trials, binsize, T)
+function [psth, edges, variability] = calc_psth(folder, allspk_bycell, cellnum, trials, binsize, T)
 
 if nargin == 4
     binsize = [];
     psth = [];
 else
-    edges = 0:binsize:T; 
+    edges = 0:binsize:T+binsize; 
     psth = zeros(length(trials), length(edges)-1);
 end
 
@@ -29,12 +29,7 @@ for t=1:length(trials)
     
 end
 
-C = corrcoef(psth');
-C = triu(C);
-C = nonzeros(C);
-corr = mean(C);
-
 variability = std(psth, 0, 1);
-psth = sum(psth, 1)/length(trials);
+psth = mean(psth, 1);
 
 end
