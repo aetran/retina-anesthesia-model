@@ -9,7 +9,7 @@ method_denoise = 'parametric';
 method_nonlinear = 'sigmoid';
 [fun_nonlinear, ~] = nonlinearity_fit(method_nonlinear);
 
-%% essentials
+%% load pre-computed
 switch date
     case '20171207'
         load([folder 'MEA_data/20171207_ethanol/allspk_kilosorted_20171207.mat']);
@@ -22,11 +22,9 @@ load([folder_results 'stim.mat']);
 load([folder_results 'PSTH.mat']);
 load([folder_results 'LN_' method_denoise '-' method_nonlinear '.mat']);
 
-binsize = 0.1;
 fps = 60;
 T = 38*29/60;
-L = T*fps; % 20 seconds at 60 fps
-xq = 1/fps * (1:L);
+xq = 1/fps:1/fps:T;
 
 %% figure settings
 set(groot,'defaultLineLineWidth',2)
@@ -58,10 +56,6 @@ cvIndices = crossvalind('Kfold', selected_cells, K);
 % for k = 1
 k = 1;
 folderName = ['cvfold' num2str(k) '_' method_denoise '_' method_nonlinear];
-
-% if ~exist(folderName, 'dir')
-%     mkdir(folderName);
-% end
 
 train_cells = selected_cells(cvIndices ~= k);
 test_cells = selected_cells(cvIndices == k);

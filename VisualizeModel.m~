@@ -9,7 +9,7 @@ method_denoise = 'parametric';
 method_nonlinear = 'sigmoid';
 [fun_nonlinear, ~] = nonlinearity_fit(method_nonlinear);
 
-%% load-precomputed
+%% essentials
 switch date
     case '20171207'
         load([folder 'MEA_data/20171207_ethanol/allspk_kilosorted_20171207.mat']);
@@ -22,19 +22,16 @@ load([folder_results 'stim.mat']);
 load([folder_results 'PSTH.mat']);
 load([folder_results 'LN_' method_denoise '-' method_nonlinear '.mat']);
 load([folder_results 'drug_' method_denoise '-' method_nonlinear '.mat']);
-folder_figresults = [folder_results 'figs-drug_' method_denoise '-' method_nonlinear '/'];
-if ~exist(folder_figresults, 'dir')
-    mkdir(folder_figresults);
-end
 
+binsize = 0.1;
 fps = 60;
 T = 38*29/60;
-xq = 1/fps:1/fps:T;
+xq = 1/fps * (1:T);
 x = stimulus_barcode;
 dx = b(1)*stimulus_barcode+b(2);
 
 %% visualize per cell
-for cellnum = selected_cells(1)
+for cellnum = selected_cells
     figure('units','normalized','outerposition',[0 0 1 1]); hold on;
     
     switch method_denoise
@@ -61,7 +58,9 @@ for cellnum = selected_cells(1)
     scatter(ldx, psth_drug_interp, 'MarkerFaceColor','k','MarkerEdgeColor','k', 'MarkerFaceAlpha',.2, 'MarkerEdgeAlpha',.2, 'DisplayName', 'drug model');
 
     xvals = xlim;
+%     thresholds = [pi_nonlinear(2)/pi_nonlinear(1), xvals(1)];
     xdata = xvals(1):0.1:xvals(2);
+%     xdata = min(thresholds):0.1:xvals(2);
     output = fun_nonlinear(pi_nonlinear, xdata);
     plot(xdata, output, 'k', 'DisplayName', 'model nonlinearity');
     
@@ -72,6 +71,6 @@ for cellnum = selected_cells(1)
     
     suptitle(num2str(cellnum));
     
-    saveas(gcf, [folder_figresults num2str(cellnum), '.jpg']);
+    saveas(gcf, [num2str(cellnum), '_scatter.jpg']);
     close;
 end

@@ -14,14 +14,15 @@ else
 end
 opt_figure = 1;
 opt_close = 0;
-cells = [16];
+opt_save = 0;
+cells = [];
 
 %% load STAs and reconstructed flicker bar stimulus and barcode stimulus
 addpath([folder 'mcd/']);
 fps = 60;
-T = 38*29/60;
-L = T*fps; % 20 seconds at 60 fps
-
+T = 38*29/60; % 20 seconds at 60 fps
+xq = 1/fps:1/fps:T;
+    
 switch date
     case '20171207'
         load([folder 'MEA_data/20171207_ethanol/allspk_kilosorted_20171207.mat']);
@@ -84,16 +85,10 @@ for cellnum = cells
     [fun_nonlinear, pi_nonlinear] = nonlinearity_fit(method_nonlinear, output_linear_flckbr, psth_flckbr);
     paramsnl(cellnum, :) = pi_nonlinear;
 
-    %% LN output: control
+    %% predicted and actual firing rates
     output_nonlinear = fun_nonlinear(pi_nonlinear, output_linear);
-    xq = 1/fps * (1:L);
-
-    %% control trials
     psth_cntrl_interp = interpolate_signal(PSTH.cntrl(cellnum, :), PSTH.edges, xq);
-
-    %% drug trials
     psth_drug_interp = interpolate_signal(PSTH.drug(cellnum, :), PSTH.edges, xq);
-    
     rho = corrcoef(output_nonlinear, psth_cntrl_interp);
     goodnessoffit(cellnum) = rho(1, 2);
 
@@ -115,11 +110,11 @@ for cellnum = cells
 
         % STA
         subplot(3, 4, 1);
-        sta_vec = ST.average{2}; % kyu version only calc one channel    
+        sta_vec = ST.average{2};
         spatial_temporal_map = reshape(sta_vec(:, cellnum)/ max(sta_vec(:, cellnum)), ST.Nx, ST.Nw);
         imagesc(spatial_temporal_map(:, :));
         colormap(col);
-        caxis([-1,1]); % set color bar the fixed range of -1 to 1 across trials
+        caxis([-1,1]);
         xlabel('Frames')
         ylabel('Bar Position');
         yticklabels({});
@@ -145,7 +140,6 @@ for cellnum = cells
         colormap(col);
         caxis([-1, 1]);
         xlabel('Frames')
-        %     ylabel('Bar position 100um/bar')
         ylabel('Bar Position');
         yticklabels({});
         
@@ -158,4 +152,6 @@ for cellnum = cells
         end
     end
 end
-% save([folder_results 'LN_' method_denoise '-' method_nonlinear '.mat'], 'paramsnl', 'paramsl', 'paramsspace', 'paramstime', 'goodnessoffit', 'SVD');
+if opt_save
+    save([folder_results 'LN_' method_denoise '-' method_nonlinear '.mat'], 'paramsnl', 'paramsl', 'paramsspace', 'paramstime', 'goodnessoffit', 'SVD');
+end
