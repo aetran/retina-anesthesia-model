@@ -4,7 +4,11 @@ if nargin == 4
     binsize = [];
     psth = [];
 else
-    edges = 0:binsize:T+binsize; 
+    if mod(T, binsize) == 0
+        edges = 0:binsize:T;
+    else
+        edges = 0:binsize:T+binsize; 
+    end
     psth = zeros(length(trials), length(edges)-1);
 end
 

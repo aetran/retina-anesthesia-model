@@ -4,9 +4,12 @@ folder = '/home/alvita/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
 %% model choices
 % method_denoise: parametric, svd
 % method_nonlinear: sigmoid, relu
+% method_stimfitnl: flicker, barcode
 date = '20171207';
 method_denoise = 'parametric';
 method_nonlinear = 'sigmoid';
+method_stimfitnl = '-barcode';
+% method_stimfitnl = '';
 [fun_nonlinear, ~] = nonlinearity_fit(method_nonlinear);
 
 %% load pre-computed
@@ -20,7 +23,7 @@ folder_results = [folder 'results/' date '/'];
 load([folder_results 'ST.mat']);
 load([folder_results 'stim.mat']);
 load([folder_results 'PSTH.mat']);
-load([folder_results 'LN_' method_denoise '-' method_nonlinear '.mat']);
+load([folder_results 'LN_' method_denoise '-' method_nonlinear method_stimfitnl '.mat']);
 
 fps = 60;
 T = 38*29/60;
@@ -36,7 +39,7 @@ col(33:65,2) = 1:-1/32:0;
 col = flipud(col);
 
 %% select cells to use for drug fitting
-THRESH = struct('correlation', 0.5, 'washout', 0.4);
+THRESH = struct('correlation', 0.6, 'washout', 0.4);
 numcells = ST.Ncell;
 all_cells = 1:numcells;
 criteria_lnfit = goodnessoffit > THRESH.correlation;
@@ -108,4 +111,4 @@ switch method_nonlinear
         surfit = @(b, XY) XY(1)./( 1+exp( -b(1)*XY(:, 2) - b(2)*XY(:, 3) + XY(:, 4) ) );
         b = lsqcurvefit(surfit, [10, 1], XY, Z);
 end
-save([folder_results 'drug_' method_denoise '-' method_nonlinear '.mat'], 'b', 'selected_cells', 'THRESH');
+% save([folder_results 'drug_' method_denoise '-' method_nonlinear '-' method_stimfitnl '.mat'], 'b', 'selected_cells', 'THRESH');

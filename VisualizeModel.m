@@ -4,9 +4,11 @@ folder = '/home/alvita/Dropbox (Vision Lab Cal Tech)/yuli-pharma/';
 %% model choices
 % method_denoise: parametric, svd
 % method_nonlinear: sigmoid, relu
+% method_stimfitnl: flicker, barcode
 date = '20171207';
 method_denoise = 'parametric';
 method_nonlinear = 'sigmoid';
+method_stimfitnl = '-barcode';
 [fun_nonlinear, ~] = nonlinearity_fit(method_nonlinear);
 
 %% load-precomputed
@@ -20,9 +22,9 @@ folder_results = [folder 'results/' date '/'];
 load([folder_results 'ST.mat']);
 load([folder_results 'stim.mat']);
 load([folder_results 'PSTH.mat']);
-load([folder_results 'LN_' method_denoise '-' method_nonlinear '.mat']);
-load([folder_results 'drug_' method_denoise '-' method_nonlinear '.mat']);
-folder_figresults = [folder_results 'figs-drug_' method_denoise '-' method_nonlinear '/'];
+load([folder_results 'LN_' method_denoise '-' method_nonlinear method_stimfitnl '.mat']);
+load([folder_results 'drug_' method_denoise '-' method_nonlinear method_stimfitnl '.mat']);
+folder_figresults = [folder_results 'figs-drug_' method_denoise '-' method_nonlinear method_stimfitnl '/'];
 if ~exist(folder_figresults, 'dir')
     mkdir(folder_figresults);
 end
@@ -34,7 +36,7 @@ x = stimulus_barcode;
 dx = b(1)*stimulus_barcode+b(2);
 
 %% visualize per cell
-for cellnum = selected_cells(1)
+for cellnum = selected_cells
     figure('units','normalized','outerposition',[0 0 1 1]); hold on;
     
     switch method_denoise
